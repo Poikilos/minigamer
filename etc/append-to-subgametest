@@ -1,0 +1,156 @@
+#!/bin/sh
+echo "If you know where everything is already, you can just to something like:"
+echo "rsync -a /home/FBM/jgustafson/Documents/GitHub/minetest-minigamer/* /usr/share/minetest/games/subgametest/mods/minigamer/"
+echo "This script requires linux and requires that you have already run install-subgametest from EnlivenMinetest project"
+pause
+script_dir="$(readlink -f $(dirname "$0"))"
+#date command info:
+# * %:z shows timezone offset (+0:00 for UTC).
+# * Escape character must be used before spaces.
+date_string=`date +%Y-%m-%d\ %X%:z`
+MINIGAMER_MSG="start_time: $date_string ..."
+MINIGAMER_INSTALL_LOG_PATH="$HOME/install-to-subgametest.log"
+echo "Running script in $script_dir"
+echo "Using log $MINIGAMER_INSTALL_LOG_PATH"
+echo "$MINIGAMER_MSG"
+echo "$MINIGAMER_MSG" > "$MINIGAMER_INSTALL_LOG_PATH"
+
+#if [ ! -d "../../minetest-minigamer" ]; then
+#  cd "$HOME/Documents/GitHub/minetest-minigamer/etc"
+#fi
+#if [ ! -d "../../minetest-minigamer" ]; then
+#  cd "$HOME/GitHub/minetest-minigamer/etc"
+#fi
+
+
+### SOURCE CHECK
+
+
+MOD_INSTALL_SRC="$(dirname "$script_dir")"
+MOD_INSTALL_PARENT="$(dirname "$MOD_INSTALL_SRC")"
+
+if [ ! -d "$MOD_INSTALL_PARENT/minetest-minigamer" ]; then
+  if [ ! -d "$MOD_INSTALL_PARENT/minigamer" ]; then
+    if [ -d "../../minigamer" ]; then
+      $script_dir="."
+    else
+      if [ -d "../../minetest-minigamer" ]; then
+        $script_dir="."
+      fi
+    fi
+  fi
+fi
+MOD_INSTALL_SRC="$(dirname "$script_dir")"
+MOD_INSTALL_PARENT="$(dirname "$MOD_INSTALL_SRC")"
+if [ ! -d "$script_dir/../../minetest-minigamer" ]; then
+  if [ ! -d "$script_dir/../../minigamer" ]; then
+    MINIGAMER_MSG="You are not running this from the right directory. The working directory must be etc or other folder inside minetest-minigamer or minigamer"
+    echo "$MINIGAMER_MSG"
+    echo "$MINIGAMER_MSG" >> "$MINIGAMER_INSTALL_LOG_PATH"
+    exit 1
+  fi
+fi
+
+MOD_INSTALL_SRC="$(dirname "$script_dir")"
+MOD_INSTALL_PARENT="$(dirname "$MOD_INSTALL_SRC")"
+
+SCRIPT_DESKTOP_NAME="Install minigamer to subgametest.desktop"
+SCRIPT_DESKTOP_PATH="$script_dir/$SCRIPT_DESKTOP_NAME"
+echo ""
+echo ""
+echo "About to DELETE \"$MTMOD_DEST_PATH\" \(if you don't want to do this, press Ctrl C now\)..."
+if [ ! -f "$SCRIPT_DESKTOP_NAME" ]; then
+echo "[Desktop Entry]" > $SCRIPT_DESKTOP_NAME
+echo "Version=1.0" >> $SCRIPT_DESKTOP_NAME
+echo "Type=Application" >> $SCRIPT_DESKTOP_NAME
+echo "Name=Install minigamer to subgametest" >> $SCRIPT_DESKTOP_NAME
+echo "Comment=Install minigamer to subgametest" >> $SCRIPT_DESKTOP_NAME
+echo "Exec=su - root -c \"$MOD_INSTALL_SRC/etc/install-to-subgametest\"" >> $SCRIPT_DESKTOP_NAME
+echo "Icon=" >> $SCRIPT_DESKTOP_NAME
+echo "Path=$MOD_INSTALL_SRC/etc" >> $SCRIPT_DESKTOP_NAME
+echo "Terminal=true" >> $SCRIPT_DESKTOP_NAME
+echo "StartupNotify=false" >> $SCRIPT_DESKTOP_NAME
+echo ""
+echo "If you are not a sudoer nor root, press Ctrl C now to exit, then run as root. This may be possible automatically using \"$SCRIPT_DESKTOP_PATH\" which was just generated \(if you do not have the root password, edit that file in a text editor to use a username that is a sudoer instead of the username root before running it.\)."
+fi
+echo ""
+
+
+### DESTINATION CHECK
+
+
+
+USR_SHARE_MINETEST=/usr/share/games/minetest
+#IF git version is installed:
+if [ -d "/usr/local/share/minetest" ]; then
+  USR_SHARE_MINETEST=/usr/local/share/minetest
+fi
+if [ -d "/usr/share/minetest" ]; then
+  USR_SHARE_MINETEST=/usr/share/minetest
+fi
+
+if [ ! -d "$USR_SHARE_MINETEST" ]; then
+  MINIGAMER_MSG="Minetest could not be found in any known location. Try installing minetest or compiling from source or editing value of USR_SHARE_MINETEST in this script. Script ended early."
+  echo "$MINIGAMER_MSG"
+  echo "$MINIGAMER_MSG" >> "$MINIGAMER_INSTALL_LOG_PATH"
+  exit 2
+fi
+
+MT_GAMES_DIR=$USR_SHARE_MINETEST/games
+MT_MYGAME_NAME=subgametest
+MT_MYGAME_DIR=$MT_GAMES_DIR/$MT_MYGAME_NAME
+#echo "Using subgame folder \"$MT_MYGAME_DIR\"..."
+MT_MYGAME_MODS_PATH=$MT_MYGAME_DIR/mods
+MTMOD_DEST_NAME=minigamer
+MTMOD_DEST_PATH=$MT_MYGAME_MODS_PATH/$MTMOD_DEST_NAME
+
+
+sudo rm -Rf "$MTMOD_DEST_PATH"
+echo "NOTE: It is too late to press Ctrl C--you are root, have successfully entered your password, have a remembered sudo session, or have edited sudoers to set your group or username to do this command without prompting."
+echo ""
+if [ -d "$MTMOD_DEST_PATH" ]; then
+  MINIGAMER_MSG="FAILED to remove \"$MTMOD_DEST_PATH\""
+  echo "$MINIGAMER_MSG"
+  echo "$MINIGAMER_MSG" >> "$MINIGAMER_INSTALL_LOG_PATH"
+  exit 5
+fi
+
+echo "Copying to \"$MTMOD_DEST_PATH\"..."
+
+if [ ! -d "$MTMOD_DEST_PATH" ]; then
+  sudo mkdir "$MTMOD_DEST_PATH"
+fi
+if [ ! -d "$MTMOD_DEST_PATH" ]; then
+  MINIGAMER_MSG="FAILED to create \"$MTMOD_DEST_PATH\""
+  echo "$MINIGAMER_MSG"
+  echo "$MINIGAMER_MSG" >> "$MINIGAMER_INSTALL_LOG_PATH"
+  exit 3
+fi
+sudo chmod +x "$SCRIPT_DESKTOP_NAME"
+
+if [ ! -d "$MTMOD_DEST_PATH/textures" ]; then
+  sudo mkdir "$MTMOD_DEST_PATH/textures"
+fi
+if [ ! -d "$MTMOD_DEST_PATH/textures" ]; then
+  MINIGAMER_MSG="FAILED to create \"$MTMOD_DEST_PATH/textures\""
+  echo "$MINIGAMER_MSG"
+  echo "$MINIGAMER_MSG" >> "$MINIGAMER_INSTALL_LOG_PATH"
+  exit 4
+fi
+
+
+### COPYING
+
+#NOTE: can't use * in quotes:
+sudo cp -Rf $MOD_INSTALL_SRC/* "$MTMOD_DEST_PATH/"
+sudo cp -Rf $MOD_INSTALL_SRC/textures/* "$MTMOD_DEST_PATH/textures"
+
+if [ ! -f "$MTMOD_DEST_PATH/init.lua" ]; then
+  MINIGAMER_MSG="Failed to copy init.lua to \"$MTMOD_DEST_PATH\""
+  echo "$MINIGAMER_MSG"
+  echo "$MINIGAMER_MSG" >> "$MINIGAMER_INSTALL_LOG_PATH"
+else
+  MINIGAMER_MSG="OK"
+  echo "$MINIGAMER_MSG"
+  echo "$MINIGAMER_MSG" >> "$MINIGAMER_INSTALL_LOG_PATH"
+fi

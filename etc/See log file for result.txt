@@ -1,0 +1,4 @@
+If you have run the desktop file and the window just disappeared, this is normal. You can find out how it went by checking the log in root's home drive, such as:
+/root/install-to-subgametest.log
+
+If that file is empty or does not exist, then "Install minigamer to subgametest.desktop" is probably broken. It was designed for Xfce and may not work on other desktops yet. You can manually run the command inside of it though by opening it in a text editor and copying the text after "Exec=" and pasting into a terminal. Remember to replace "root" with the name of a sudoer if you do not have the root password but do have a sudoer's password.

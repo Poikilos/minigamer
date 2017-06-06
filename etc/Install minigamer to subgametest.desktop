@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Install minigamer to subgametest
+Comment=Install minigamer to subgametest
+Exec=su - root -c "/home/FBM/jgustafson/Documents/GitHub/minetest-minigamer/etc/install-to-subgametest"
+Icon=
+Path=/home/FBM/jgustafson/Documents/GitHub/minetest-minigamer/etc
+Terminal=true
+StartupNotify=false
