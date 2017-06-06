@@ -9,10 +9,18 @@ local games_dir = minetest.get_worldpath() .. "/minigamer/games"
 dofile(minetest.get_modpath("minigamer").."/settings.lua")
 dofile(minetest.get_modpath("minigamer").."/commands.lua")
 
+-- http://lua-users.org/wiki/FileInputOutput
+function file_exists(file)
+  local f = io.open(file, "rb")
+  if f then f:close() end
+  return f ~= nil
+end
+
 local function loadgames()
     minigamer.games = {}
     -- true:directories; false:files; nil:both
-    for path in minetest.get_dir_list(games_dir, true)
+    local dir_list = minetest.get_dir_list(games_dir, true)
+    for k,path in pairs(dir_list) do
         if string.len(path) > 0 then
             minetest.log("action", "[minigamer] loading minigame "..line.."...")
             minigamer.games[path] = {}
@@ -25,7 +33,8 @@ loadgames()
 local function loadinstances()
     for k, v in pairs(minigamer.games) do
         -- true:directories; false:files; nil:both
-        for path in minetest.get_dir_list(games_dir.."/instances/"..k, false)
+        local dir_list = minetest.get_dir_list(games_dir.."/instances/"..k, false)
+        for path in pairs(dir_list) do
             for i=1,minigamer.max_instance_count do
                 if string.sub(path,0,0) ~= "." then
                     minetest.log("action", "[minigamer] loading minigame "..line.."...")
@@ -37,15 +46,29 @@ end
 
 loadinstances()
 
-minetest.register_tool("minigamer:rulebook", {
+minetest.register_craftitem("minigamer:rulebook", {
     description = "Minigamer Rulebook",
     inventory_image = "minigamer_tool_rulebook.png",
-    tool_capabilities = {
-        max_drop_level=0,
-        groupcaps={
-            cracky={times={[1]=1.0, [2]=1.0, [3]=1.0}, uses=999, maxlevel=4}
-        }
-    },
+	stack_max = 1,
+	liquids_pointable = true,
+    on_use = function(itemstack, user, pointed_thing)
+        local username = user:get_player_name()
+        if pointed_thing.type == "object" then
+            minetest.chat_send_player(username, "Manipulated Object")
+			-- return user:get_wielded_item()
+			return
+        elseif pointed_thing.type == "node" then
+            local this_node = minetest.get_node(pointed_thing.under)
+            -- local this_node = minetest.get_node(node_pos)
+            local node_pos = pointed_thing.under
+            minetest.chat_send_player(username, "Manipulated Node at "..minetest.pos_to_string(node_pos))
+            local nodename = this_node.name
+			return
+        else
+            minetest.chat_send_player(username, "Manipulated "..pointed_thing.type)
+			return
+        end
+    end,
 })
 
 -- TODO: unload player from minigame if logs out of minetest:
